@@ -9,7 +9,6 @@ from typing import Optional
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-
 # COMMAND ----------
 
 from typing import Tuple
@@ -54,9 +53,6 @@ class DistributionInfo:
   
     return self._kurtosis(), self._skew()
   
-  
-
-# COMMAND ----------
 
 class EM_impute(DistributionInfo):
     from typing import Optional, Tuple
@@ -84,11 +80,6 @@ class EM_impute(DistributionInfo):
       
       return skewnorm.rvs(loc = mean, scale = std, size=1)
     
-    def _get_from_uniform(
-        self,
-        min: float,
-        max: float
-    ):
     
       return np.random.uniform(min, max)
     
@@ -175,48 +166,6 @@ class EM_impute(DistributionInfo):
                 self.array[nan_index[prvek - 1]] = val
 
         return self.array, val_lst, index_lst
-      
-    def _impute_uniform(
-                self,
-                nan_array: np.array, 
-                nan_index: np.array, 
-                tol: Optional[float] = None
-                ):
-        
-        val_lst = []
-        index_lst = []
-        prev  = 100000
-        prvek = 0
-
-        for _ in nan_array:
-            prvek += 1
-            val = self._get_from_normal()
-            delta = np.abs(val - prev) / prev
-            val_lst.append(delta)
-            index_lst.append(prvek)
-            prev = val
-          
-            if tol:
-                while np.abs(delta) > tol:
-                  val = self._get_from_uniform()
-                  delta = np.abs(val - prev) / prev
-                  prev = val
-                  val_lst.append(delta)
-                  index_lst.append(prvek)               
-
-                self.array[nan_index[prvek - 1]] = val
-            else:
-                while np.abs(delta) > 0.01:
-                  val = self._get_from_uniform()
-                  delta =  np.abs(val - prev) / prev
-                  prev = val
-                  val_lst.append(delta)
-                  index_lst.append(prvek)
-
-                self.array[nan_index[prvek - 1]] = val
-
-        return self.array, val_lst, index_lst
-
     def em_imputation(self, **params) -> np.array:
       
       for k, v in params.items():
@@ -269,7 +218,7 @@ class ImpPlot:
                   type_plot: Optional[str] = None
                 ):
   
-    if (method and tol and name) is not None:
+    if (tol and name) is not None:
       plt.savefig(f'/dbfs/mnt/pbi/Bots/T_budget/{type_plot}_{name}_{distribution}_{tol}.png')
       plt.savefig(f'/dbfs/mnt/pbi/Bots/T_budget/{type_plot}_{name}_{distribution}_{tol}.png')
     elif name is not None:
@@ -310,69 +259,11 @@ class ImpPlot:
       
     plt.grid(True)
     
-    self.save_figure(
-                  distribution = distribution,
-                  tol = tol,
-                  name = name
-                )
-    
-    return self.save_figure(
-                  distribution = distribution,
-                  tol = tol,
-                  name = name
-                )
-    #plt.show()
-  
-  def err_plot(self,   
-                  err: np.array,
-                  iter: np.array,
-                  y_color: str, 
-                  y_label: str,
-                  iter_to_plot: int,
-                  units: Optional[str],
-                  y_lim: Optional[list] = None,
-                  distribution: Optional[str] = None,
-                  tol: Optional[str] = None,
-                  name: Optional[str] = None
-              ):
-    
-    y = self.filter_error_iteration(err, iter, iter_to_plot)
-    if units is None:
-      units = '[-]'
-    #Figure grid setup
-    fig, ax = plt.subplots(figsize = (20, 10))
-    
-    if (self.SMALL_SIZE is not None) and (self.SMALL_SIZE is not None):
-      self._config_text(SMALL_SIZE = self.SMALL_SIZE, BIG_SIZE = self.BIG_SIZE)
-    
-    #grid max-min
-    plt.xlim([0, len(y) + 1])
-    
-    if y_lim is not None:
-      plt.ylim(y_lim)
-    
-    #Plot baselines
-    plt.axhline(y = 0, color = 'k', linestyle = '-')
-    plt.axhline(y = 0.01, color = 'r', linestyle = ':')
-    plt.axhline(y = -0.01, color = 'r', linestyle = ':')
-    
-    #plot legend
-    ax.set_xlabel(f"{iter_to_plot}-tá iterace {units}")
-    ax.set_ylabel(f"Velikost relativního rozdílu i-té a předchozí iterace")
-    ax.set_title(f'Velikost relativního rozdílu i-té a předchozí iterace pro {iter_to_plot}-tý chybějící bod')
-    
-    #plotting
-    plt.plot(y, y_color, label = y_label)
-    plt.legend()
-    
-    self.save_figure(
-                  distribution = distribution,
-                  tol = tol,
-                  name = name,
-                  type_plot = "error"
-                )
-    
-    return plt.show()
+    #self.save_figure(
+    #              distribution = distribution,
+    #              tol = tol,
+    #              name = name
+    #            )
 
   
   def imp_plot( self,
@@ -428,11 +319,6 @@ class ImpPlot:
     return plt.show()
 
 
-    
-
-
-# COMMAND ----------
-
 class ImpError:
   def __init__(self, actual: np.array, imputed: np.array):
     self.actual = actual
@@ -445,42 +331,25 @@ class ImpError:
       error_lst.append(err)
 
       #print(f"Actual: {actual} \t Imputed: {imputed} \t err: {err} \n")
-      np.savetxt(f"/dbfs/mnt/pbi/Bots/err_{name}.csv", error_lst, delimiter=",")
+      #np.savetxt(f"/dbfs/mnt/pbi/Bots/err_{name}.csv", error_lst, delimiter=",")
       
       
       
     return sum(error_lst) / len(self.imputed)
   
 
-# COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Globals
-
-# COMMAND ----------
 
 EM_SKUTECNA = "Skutečná hodnota"
 EM_ODHADNUTA = "Hodnota odhanutá EM algoritmem"
 CHYBA_ODHADU = "Chyba odhadu chybějící hodnoty"
 
-# COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Air temperature
+col = 'Teplota vzduchu'
 
-# COMMAND ----------
+df = pd.read_csv(f"./data/x_test_miss.csv")
 
 
-#############################################
-col = 'Air temperature [K]'
-
-df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
-
-#################################################################################################################################
-from sklearn.model_selection import train_test_split
-x_train, x_test, y_train, y_test = train_test_split(df.loc[:, df.columns != 'b'], df['Target'], test_size=0.99, random_state=42)
-df = x_test
-#################################################################################################################################
 
 copy_arr_air_temp = df[col][0:50].copy()
 df[col][0:50] = np.nan
@@ -495,74 +364,13 @@ error_normal = ImpError(
   imputed = pred_normal_air_temp[0:50]
 )
 
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/pred_normal_air.csv", pred_normal_air_temp[0:50], delimiter=",")
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/orig_normal_air.csv", copy_arr_air_temp[0:50], delimiter=",")
-
 error_normal._calculate_error_point(name = col)
-
-
-
-# COMMAND ----------
-
-ITER_TO_PLOT = 25
-
-# COMMAND ----------
 
 pplot = ImpPlot(
                 SMALL_SIZE = 20, 
                 BIG_SIZE = 16
             )
 
-ITER_TO_PLOT = 35
-
-pplot.err_plot(
-                error_lst_normal_air_temp, 
-                index_lst_normal_air_temp, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.1, 0.15], 
-                units = '[K]', 
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'teplota_vzduchu'
-            )
-
-
-
-# COMMAND ----------
-
-pplot.err_plot(
-                error_lst_normal_air_temp, 
-                index_lst_normal_air_temp, 
-                'o', CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.05, 0.05],
-                units = "[K]",
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'teplota_vzduchu'
-            )
-
-# COMMAND ----------
-
-pplot.err_plot(
-                error_lst_normal_air_temp, 
-                index_lst_normal_air_temp, 
-                'o', CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0,1, 0.15], 
-                units = '[K]', 
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'teplota_vzduchu'
-            )
-
-# COMMAND ----------
-
-x_test.head(50)
-
-# COMMAND ----------
 
 pplot.imp_plot(
                y = copy_arr_air_temp[0:50],
@@ -573,16 +381,8 @@ pplot.imp_plot(
                y2_label = EM_ODHADNUTA
               )
 
-# COMMAND ----------
-
-##########################################################################################################################################################################################################################################
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # Kroutici moment
-
-# COMMAND ----------
+df[col][0:50] = pred_normal_air_temp[0:50]
+df.to_csv('x_test_miss.csv')
 
 import numpy as np
 import pandas as pd
@@ -591,14 +391,11 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-col = 'Torque [Nm]'
+col = 'Kroutící moment'
 
-df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
+df = pd.read_csv(f"./data/x_test_miss.csv")
 
-###########################################################################
-from sklearn.model_selection import train_test_split
-x_train, x_test, y_train, y_test = train_test_split(df.loc[:, df.columns != 'b'], df['Target'], test_size=0.99, random_state=42)
-df = x_test
+
 #################################################################
 
 copy_arr_torque = df[col][0:50].copy()
@@ -614,8 +411,8 @@ error_normal = ImpError(
   imputed = pred_normal_torque[0:50]
 )
 
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/pred_normal_torque.csv", pred_normal_torque[0:50], delimiter=",")
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/orig_normal_torque.csv", copy_arr_torque[0:50], delimiter=",")
+df[col][0:50] = pred_normal_torque[0:50]
+df.to_csv('x_test_miss.csv')
 
 error_normal._calculate_error_point(name = col)
 
@@ -624,48 +421,6 @@ error_normal._calculate_error_point(name = col)
 pplot = ImpPlot(
                 SMALL_SIZE = 20, 
                 BIG_SIZE = 16
-            )
-pplot.err_plot(
-                error_lst_normal_torque, 
-                index_lst_normal_torque, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.2, 1], 
-                units = '[Nm]', 
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'kroutici_moment0'
-            )
-
-
-# COMMAND ----------
-
-pplot.err_plot(
-                error_lst_normal_torque, 
-                index_lst_normal_torque, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, y_lim = [-0.1, 0.35], 
-                units = '[Nm]',  
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'kroutici_moment1'
-            )
-
-
-# COMMAND ----------
-
-pplot.err_plot(
-                error_lst_normal_torque, 
-                index_lst_normal_torque, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, y_lim = [-0.05, 0.15], 
-                units = '[Nm]', 
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'kroutici_moment2'
             )
 
 
@@ -684,53 +439,10 @@ pplot.imp_plot(
                name = 'kroutici_moment3'
               )
 
-# COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Universal plot
+col = 'Rychlost otáček'
 
-# COMMAND ----------
-
-'''
-pplot = ImpPlot(
-                SMALL_SIZE = 20, 
-                BIG_SIZE = 16
-            )
-pplot.err_plot(error_lst_normal_torque, index_lst_normal_torque, 'o', 'Chyba odhadu chybejici hodnoty', iter_to_plot = 20, y_lim = [-1, 1])
-
-pplot.err_plot(error_lst_normal, index_lst_normal, 'o', 'Chyba odhadu chybejici hodnoty', iter_to_plot = 20, y_lim = [-0.1, 1])
-
-pplot.err_plot(error_lst_normal, index_lst_normal, 'o', 'Chyba odhadu chybejici hodnoty', iter_to_plot = 20, y_lim = [-0.1, 0.15])
-pplot.imp_plot(
-               y = copy_arr[0:50],
-               y2 = pred_normal[0:50],
-               y_color = 'o:r',
-               y_label = EM_SKUTECNA,
-               y2_color = 'o:b',
-               y2_label = EM_ODHADNUTA
-              )
-p.savetxt("/dbfs/mnt/pbi/Bots/T_budget/pred_normal_torque.csv", pred_normal_torque[0:50], delimiter=",")
-'''
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # Otacky skewnormal rozdeleni
-
-# COMMAND ----------
-
-col = 'Rotational speed [rpm]'
-#col = 'Torque [Nm]'
-
-df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
-
-#################################################################################33
-from sklearn.model_selection import train_test_split
-x_train, x_test, y_train, y_test = train_test_split(df.loc[:, df.columns != 'b'], df['Target'], test_size=0.99, random_state=42)
-df = x_test
-######################################################################################
-
-#df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
+df = pd.read_csv(f"./data/x_test_miss.csv")
 
 copy_skewed_arr = df[col][0:50].copy()
 df[col][0:50] = np.nan
@@ -748,86 +460,16 @@ error_normal = ImpError(
   imputed = pred_skewed_normal[0:50]
 )
 
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/pred_skewed_normal.csv", pred_skewed_normal[0:50], delimiter=",")
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/orig_skewed_normal.csv", copy_skewed_arr[0:50], delimiter=",")
-
-
-error_normal._calculate_error_point(name = col)
-
-
-################################################################################################################################
-
-# COMMAND ----------
+print(error_normal._calculate_error_point(name = col))
 
 distr = DistributionInfo(vals = df[col])
 distr.get_kurtosis_skewness()  
 
-# COMMAND ----------
-
-l = 50
-soucet = 0
-for i, ii in list(zip(copy_skewed_arr[0:50], pred_skewed_normal[0:50])):
-  val = (i - ii) / i
-  
-  soucet += val
-  
-soucet / l
-
-# COMMAND ----------
-
-len(error_lst_skewed_normal)
-
-# COMMAND ----------
 
 pplot = ImpPlot(
                 SMALL_SIZE = 20, 
                 BIG_SIZE = 16
             )
-pplot.err_plot(
-              error_lst_skewed_normal, 
-              index_lst_skewed_normal, 
-              'o', 
-              CHYBA_ODHADU, 
-              iter_to_plot = ITER_TO_PLOT, 
-              y_lim = [-0.1, 0.6],
-              units = "[ot/m]",
-              distribution = "normal", 
-              tol = '0.01', 
-              name = 'otacky'
-  )
-
-
-# COMMAND ----------
-
-pplot.err_plot(
-              error_lst_skewed_normal, 
-              index_lst_skewed_normal, 
-              'o', 
-              CHYBA_ODHADU, 
-              iter_to_plot = ITER_TO_PLOT, 
-              y_lim = [-0.1, 0.25],
-              distribution = "skew_normal", 
-              tol = '0.01',
-              units = "[ot/min]",
-              name = 'otacky1'
-  )
-
-
-# COMMAND ----------
-
-pplot.err_plot(
-              error_lst_skewed_normal, 
-              index_lst_skewed_normal, 
-              'o', 
-              CHYBA_ODHADU, 
-              iter_to_plot = ITER_TO_PLOT, 
-              y_lim = [-0.1, 0.15], 
-              distribution = "skew_normal", 
-              tol = '0.01', 
-              units = "[ot/min]",
-              name = 'otacky2'
-  )
-
 
 # COMMAND ----------
 
@@ -844,24 +486,14 @@ pplot.imp_plot(
                name = 'otacky3'
               )
 
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC # Otacky normal tol
-
-# COMMAND ----------
-
 from sklearn.model_selection import train_test_split
 
-col = 'Rotational speed [rpm]'
-#col = 'Torque [Nm]'
+col = 'Rychlost otáček'
 
-df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
+df = pd.read_csv(f"./data/x_test.csv")
 
 #################################################################################################################################
 from sklearn.model_selection import train_test_split
-x_train, x_test, y_train, y_test = train_test_split(df.loc[:, df.columns != 'b'], df['Target'], test_size=0.99, random_state=42)
-df = x_test
 #################################################################################################################################
 
 copy_arr_normal_tol = df[col][0:50].copy()
@@ -877,76 +509,9 @@ error_normal_tol = ImpError(
   imputed = pred_normal_tol[0:50]
 )
 
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/pred_normal_tol.csv", pred_normal_tol[0:50], delimiter=",")
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/orig_normal_tol.csv", copy_arr_normal_tol[0:50], delimiter=",")
 
-error_normal_tol._calculate_error_point(name = col)
+print(error_normal_tol._calculate_error_point(name = col))
 
-
-# COMMAND ----------
-
-l = 50
-soucet = 0
-for i, ii in list(zip(copy_skewed_arr[0:50], pred_normal_tol[0:50])):
-  val = (i - ii) / i
-  
-  soucet += val
-  
-soucet / l
-
-# COMMAND ----------
-
-pplot = ImpPlot()
-pplot.err_plot(
-                error_lst_tol, 
-                index_lst_tol, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.1, 0.15], 
-                distribution = "normal", 
-                tol = '0.01', 
-                name = 'otacky',
-                units = "[ot/min]"
-            )
-
-
-# COMMAND ----------
-
-pplot = ImpPlot()
-
-pplot.err_plot(
-                error_lst_tol, 
-                index_lst_tol, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.1, 0.5],
-                distribution = "normal", 
-                tol = '0.01', 
-                units = "[ot/min]",
-                name = 'otacky1'
-            )
-
-
-# COMMAND ----------
-
-
-pplot = ImpPlot()
-pplot.err_plot(
-                error_lst_tol, 
-                index_lst_tol, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.1, 0.15],
-                distribution = "normal", 
-                tol = '0.01', 
-                units = "[ot/min]",
-                name = 'otacky2'
-            )
-
-# COMMAND ----------
 
 pplot = ImpPlot()
 pplot.imp_plot(
@@ -961,91 +526,35 @@ pplot.imp_plot(
                name = 'otacky3'
               )
 
-# COMMAND ----------
+df[col][0:50] = pred_skewed_normal[0:50]
+df.to_csv('x_test_miss.csv')
 
-# MAGIC %md
-# MAGIC # Opotrebeni nastroje
 
-# COMMAND ----------
 
-col = 'Tool wear [min]'
-#col = 'Torque [Nm]'
+col = 'Opotřebení nástroje'
 
-df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
 
-#################################################################################################################################
-from sklearn.model_selection import train_test_split
-x_train, x_test, y_train, y_test = train_test_split(df.loc[:, df.columns != 'b'], df['Target'], test_size=0.99, random_state=42)
-df = x_test
-#################################################################################################################################
+df = pd.read_csv(f"./data/x_test.csv")
+
+
 
 copy_arr_tool_wear = df[col][0:50].copy()
 df[col][0:50] = np.nan
 
 impute = EM_impute(df[col].to_numpy())
-pred_uniform, error_lst_uniform, index_lst_uniform = impute.em_imputation(distribution = "normal", tol = 0.001)
+pred_normal, error_lst, index_lst_normal = impute.em_imputation(distribution = "normal", tol = 0.001)
 
 copy_arr_tool_wear = copy_arr_tool_wear.to_numpy()
 
 error_uniform = ImpError(
   actual = copy_arr_tool_wear[0:50],
-  imputed = pred_uniform[0:50]
+  imputed = pred_normal[0:50]
 )
 
-np.savetxt("/dbfs/mnt/pbi/Bots/T_budget/pred_uniform.csv", pred_uniform[0:50], delimiter=",")
+df[col][0:50] = pred_normal[0:50]
+df.to_csv('x_test_miss.csv')
 
 error_uniform._calculate_error_point(name = col)
-
-# COMMAND ----------
-
-
-pplot.err_plot(
-                error_lst_uniform, 
-                index_lst_uniform, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-1, 1],
-                distribution = "normal", 
-                tol = '0.01', 
-                units = "[ot/min]",
-                name = 'opotrebeni'
-            )
-
-
-# COMMAND ----------
-
-
-pplot.err_plot(
-                error_lst_uniform, 
-                index_lst_uniform, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.1, 0.5],
-                distribution = "normal", 
-                tol = '0.01', 
-                units = "[ot/min]",
-                name = 'opotrebeni1'
-            )
-
-
-# COMMAND ----------
-
-
-pplot.err_plot(
-                error_lst_uniform, 
-                index_lst_uniform, 
-                'o', 
-                CHYBA_ODHADU, 
-                iter_to_plot = ITER_TO_PLOT, 
-                y_lim = [-0.1, 0.5], 
-                distribution = "normal", 
-                tol = '0.01', 
-                units = "[ot/min]",
-                name = 'opotrebeni3'
-            )
-
 
 # COMMAND ----------
 
@@ -1056,7 +565,7 @@ pplot = ImpPlot(
 
 pplot.imp_plot(
                y = copy_arr_tool_wear[0:50],
-               y2 = pred_uniform[0:50],
+               y2 = pred_normal[0:50],
                y_color = 'o:r',
                y_label = EM_SKUTECNA,
                y2_color = 'o:b',
@@ -1067,13 +576,6 @@ pplot.imp_plot(
                name = "opotrebeni3"
               )
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC # Histplots
-
-# COMMAND ----------
-
 import numpy as np
 import pandas as pd
 from typing import Optional
@@ -1081,8 +583,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-df = pd.read_csv(f"/dbfs/mnt/pbi/Bots/Bot20/predictive_maintenance.csv")
-df_1000 = df.sample(500)
+df = pd.read_csv(f"./data/x_test_miss.csv")
 
 # COMMAND ----------
 
@@ -1091,46 +592,16 @@ import numpy as np
 import seaborn as sns
 
 plt.style.use('fivethirtyeight')
-
-np.random.seed(0)
-train = np.random.exponential(2, size=100000)
-test = df['Rotational speed [rpm]']
+test = df['Rychlost otáček']
 
 SAMPLE_SIZE = 10000
 N_BINS = 300
 
-# Obtain `N_BINS` equal frequency bins, in other words percentiles
-step = 100 / N_BINS
-test_percentiles = [
-    np.percentile(test, q, axis=0)
-    for q in np.arange(start=step, stop=100, step=step)
-]
-
-# Match each observation in the training set to a bin
-train_bins = np.digitize(train, test_percentiles)
-
-# Count the number of values in each training set bin
-train_bin_counts = np.bincount(train_bins)
-
-# Weight each observation in the training set based on which bin it is in
-weights = 1 / np.array([train_bin_counts[x] for x in train_bins])
-
-# Make the weights sum up to 1
-weights_norm = weights / np.sum(weights)
-
-np.random.seed(0)
-sample = np.random.choice(train, size=SAMPLE_SIZE, p=weights_norm, replace=False)
-
-# COMMAND ----------
-
-len(test_percentiles)
-
-# COMMAND ----------
 
 pplot = ImpPlot(SMALL_SIZE = 20, 
                 BIG_SIZE = 16)
 pplot.histplot(
-                data = df['Rotational speed [rpm]'][50:], 
+                data = df['Rychlost otáček'][50:], 
                 bins = 300,
                 x_name = 'Otáčky [ot/m]',
                 title = 'Otáčky [ot/m]',
@@ -1139,27 +610,10 @@ pplot.histplot(
 
 
 
-# COMMAND ----------
-
-
 pplot = ImpPlot(SMALL_SIZE = 20, 
                 BIG_SIZE = 16)
 pplot.histplot(
-                data = df_1000['Rotational speed [rpm]'], 
-                bins = 300, 
-                x_name = 'Otáčky [ot/m]',
-                title = 'Otáčky [ot/m]',
-                figsize = (16, 8)
-            )
-
-
-
-# COMMAND ----------
-
-pplot = ImpPlot(SMALL_SIZE = 20, 
-                BIG_SIZE = 16)
-pplot.histplot(
-                data = df['Torque [Nm]'][50:], 
+                data = df['Kroutící moment'][50:], 
                 bins = 50, 
                 x_name = 'Kroutící moment [Nm]',
                 title = 'Kroutící moment [Nm]',
@@ -1167,25 +621,11 @@ pplot.histplot(
             )
 
 
-# COMMAND ----------
 
 pplot = ImpPlot(SMALL_SIZE = 20, 
                 BIG_SIZE = 16)
 pplot.histplot(
-                data = df_1000['Torque [Nm]'], 
-                bins = 50, 
-                x_name = 'Kroutící moment [Nm]',
-                title = 'Kroutící moment [Nm]',
-                figsize = (16, 8)
-            )
-
-
-# COMMAND ----------
-
-pplot = ImpPlot(SMALL_SIZE = 20, 
-                BIG_SIZE = 16)
-pplot.histplot(
-                data = df['Air temperature [K]'][50:], 
+                data = df['Teplota vzduchu'][50:], 
                 bins = 50, 
                 x_name = 'Teplota vzduchu [K]',
                 title = 'Teplota vzduchu [K]',
@@ -1198,7 +638,7 @@ pplot.histplot(
 pplot = ImpPlot(SMALL_SIZE = 20, 
                 BIG_SIZE = 16)
 pplot.histplot(
-                data = df_1000['Air temperature [K]'], 
+                data = df['Teplota vzduchu'][50:], 
                 bins = 50, 
                 x_name = 'Teplota vzduchu [K]',
                 title = 'Teplota vzduchu [K]',
@@ -1211,56 +651,10 @@ pplot.histplot(
 pplot = ImpPlot(SMALL_SIZE = 20, 
                 BIG_SIZE = 16)
 pplot.histplot(
-                data = df['Tool wear [min]'][50:], 
+                data = df['Opotřebení nástroje'][50:], 
                 bins = 50, 
                 x_name = 'Délka opotřebení [min]',
                 title = 'Délka opotřebení [min]',
-                figsize = (16, 8)
-            )
-
-
-
-# COMMAND ----------
-
-pplot = ImpPlot(SMALL_SIZE = 20, 
-                BIG_SIZE = 16)
-pplot.histplot(
-                data = df_1000['Tool wear [min]'], 
-                bins = 50, 
-                x_name = 'Délka opotřebení [min]',
-                title = 'Délka opotřebení [min]',
-                figsize = (16, 8)
-            )
-
-
-
-# COMMAND ----------
-
-df.columns
-
-# COMMAND ----------
-
-pplot = ImpPlot(SMALL_SIZE = 20, 
-                BIG_SIZE = 16)
-pplot.histplot(
-                data = df['Process temperature [K]'][50:], 
-                bins = 30, 
-                x_name = 'Teplota procesu [K]]',
-                title = 'Teplota procesu [K]',
-                figsize = (16, 8)
-            )
-
-
-
-# COMMAND ----------
-
-pplot = ImpPlot(SMALL_SIZE = 20, 
-                BIG_SIZE = 16)
-pplot.histplot(
-                data = df_1000['Process temperature [K]'], 
-                bins = 30, 
-                x_name = 'Teplota procesu [K]]',
-                title = 'Teplota procesu [K]',
                 figsize = (16, 8)
             )
 
