@@ -347,7 +347,7 @@ CHYBA_ODHADU = "Chyba odhadu chybějící hodnoty"
 
 col = 'Teplota vzduchu'
 
-df = pd.read_csv(f"./data/x_test_miss.csv")
+df = pd.read_csv(f"./data/x_train_miss.csv")
 
 
 
@@ -382,7 +382,7 @@ pplot.imp_plot(
               )
 
 df[col][0:50] = pred_normal_air_temp[0:50]
-df.to_csv('x_test_miss.csv')
+df.to_csv('x_train_miss.csv')
 
 import numpy as np
 import pandas as pd
@@ -393,7 +393,7 @@ import matplotlib as mpl
 
 col = 'Kroutící moment'
 
-df = pd.read_csv(f"./data/x_test_miss.csv")
+df = pd.read_csv(f"./data/x_train_miss.csv")
 
 
 #################################################################
@@ -412,7 +412,7 @@ error_normal = ImpError(
 )
 
 df[col][0:50] = pred_normal_torque[0:50]
-df.to_csv('x_test_miss.csv')
+df.to_csv('x_train_miss.csv')
 
 error_normal._calculate_error_point(name = col)
 
@@ -442,7 +442,7 @@ pplot.imp_plot(
 
 col = 'Rychlost otáček'
 
-df = pd.read_csv(f"./data/x_test_miss.csv")
+df = pd.read_csv(f"./data/x_train_miss.csv")
 
 copy_skewed_arr = df[col][0:50].copy()
 df[col][0:50] = np.nan
@@ -490,7 +490,7 @@ from sklearn.model_selection import train_test_split
 
 col = 'Rychlost otáček'
 
-df = pd.read_csv(f"./data/x_test.csv")
+df = pd.read_csv(f"./data/x_train.csv")
 
 #################################################################################################################################
 from sklearn.model_selection import train_test_split
@@ -527,14 +527,14 @@ pplot.imp_plot(
               )
 
 df[col][0:50] = pred_skewed_normal[0:50]
-df.to_csv('x_test_miss.csv')
+df.to_csv('x_train_miss.csv')
 
 
 
 col = 'Opotřebení nástroje'
 
 
-df = pd.read_csv(f"./data/x_test.csv")
+df = pd.read_csv(f"./data/x_train.csv")
 
 
 
@@ -552,7 +552,7 @@ error_uniform = ImpError(
 )
 
 df[col][0:50] = pred_normal[0:50]
-df.to_csv('x_test_miss.csv')
+df.to_csv('x_train_miss.csv')
 
 error_uniform._calculate_error_point(name = col)
 
@@ -583,7 +583,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-df = pd.read_csv(f"./data/x_test_miss.csv")
+df = pd.read_csv(f"./data/x_train_miss.csv")
 
 # COMMAND ----------
 
